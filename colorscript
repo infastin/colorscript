@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+CS_DIRS=(
+	/usr/local/share/colorscript
+	/usr/share/colorscript
+	$HOME/.local/share/colorscript
+)
+
+declare CS_LIST
+declare -A CS_TABLE
+
+_prep() {
+	for dir in ${CS_DIRS[@]}; do
+		if ! [[ -d $dir ]]; then
+			continue
+		fi
+		
+		for spath in $dir/*; do
+			if ! [[ -f $spath ]]; then
+				continue
+			fi
+			
+			sname=$(basename $spath)
+			
+			if [[ -z ${CS_TABLE[$sname]} ]]; then
+				CS_LIST+=($sname)
+			fi
+			
+			CS_TABLE[$sname]=$spath
+		done
+	done
+}
+
+_usage() {
+	pname=$(basename $0)
+
+	echo "Usage: ${pname} [OPTION] [VALUE]"
+	echo "Options:"
+	echo -e "  -h\tPrint this message"
+	echo -e "  -n\tRun script with the name given in VALUE"
+	echo -e "  -i\tRun script with the index given in VALUE"
+	echo -e "  -s\tSelect script to run"
+	echo -e "  -l\tList all available scripts"
+	echo -e "  -r\tRun random script"
+
+	exit 0
+}
+
+_len() {
+	echo ${#CS_LIST[@]}
+}
+
+_run_cs() {
+	sname=$1
+	spath=${CS_TABLE[$sname]}
+	
+	echo $sname
+	exec $spath
+	
+	exit 0
+}
+
+_random() {
+	rnd=$(($RANDOM % $(_len)))
+	sname=${CS_LIST[$rnd]}
+	
+	_run_cs $sname
+}
+
+_sel_cs() {
+	select sname in ${CS_LIST[@]}; do
+		if [[ -n $sname ]]; then
+			break;
+		fi
+		
+		echo "Invalid choice!"
+	done
+	
+	_run_cs $sname
+}
+
+_list() {
+	i=0
+	for sname in ${CS_LIST[@]}; do
+		echo "$i) $sname"
+		i=$(($i+1))
+	done | column
+	
+	exit 0
+}
+
+_index() {
+	sidx=$(($1 - 1))
+	
+	if [[ $sidx -lt 0 || $sidx -ge $(_len) ]]; then
+		echo "Invalid index!"
+		exit 1
+	fi
+	
+	sname=${CS_LIST[$sidx]}
+	
+	_run_cs $sname
+}
+
+_name() {
+	sname=$1
+	
+	if [[ -z ${CS_TABLE[$sname]} ]]; then
+		echo "Invalid name!"
+		exit 1
+	fi
+	
+	_run_cs $sname
+}
+
+_prep
+
+while getopts hlsn:i:r arg; do
+	case $arg in
+	h) _usage ;;
+	n) _name $OPTARG ;;
+	i) _index $OPTARG ;;
+	r) _random ;;
+	s) _sel_cs ;;
+	l) _list ;;
+	?) break ;;
+	esac
+done
+
+_usage
