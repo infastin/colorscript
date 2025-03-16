@@ -33,15 +33,14 @@ initializeANSI
 
 cat << EOF
 
- ${redf} ▄█▀ █ █ ▀█▄   ${greenf} ▄█▀ █ █ ▀█▄   ${yellowf} ▄█▀ █ █ ▀█▄   ${bluef} ▄█▀ █ █ ▀█▄   ${purplef} ▄█▀ █ █ ▀█▄   ${cyanf} ▄█▀ █ █ ▀█▄
- ${redf}███  ███  ███  ${greenf}███  ███  ███  ${yellowf}███  ███  ███  ${bluef}███  ███  ███  ${purplef}███  ███  ███  ${cyanf}███  ███  ███
- ${redf}█████████████  ${greenf}█████████████  ${yellowf}█████████████  ${bluef}█████████████  ${purplef}█████████████  ${cyanf}█████████████
- ${redf} ▀██▄   ▄██▀   ${greenf} ▀██▄   ▄██▀   ${yellowf} ▀██▄   ▄██▀   ${bluef} ▀██▄   ▄██▀   ${purplef} ▀██▄   ▄██▀   ${cyanf} ▀██▄   ▄██▀
+${redf}  ▄█▀ █ █ ▀█▄  ${greenf}  ▄█▀ █ █ ▀█▄  ${yellowf}  ▄█▀ █ █ ▀█▄  ${bluef}  ▄█▀ █ █ ▀█▄  ${purplef}  ▄█▀ █ █ ▀█▄  ${cyanf}  ▄█▀ █ █ ▀█▄  ${reset}
+${redf} ███  ███  ███ ${greenf} ███  ███  ███ ${yellowf} ███  ███  ███ ${bluef} ███  ███  ███ ${purplef} ███  ███  ███ ${cyanf} ███  ███  ███ ${reset}
+${redf} █████████████ ${greenf} █████████████ ${yellowf} █████████████ ${bluef} █████████████ ${purplef} █████████████ ${cyanf} █████████████ ${reset}
+${redf}  ▀██▄   ▄██▀  ${greenf}  ▀██▄   ▄██▀  ${yellowf}  ▀██▄   ▄██▀  ${bluef}  ▀██▄   ▄██▀  ${purplef}  ▀██▄   ▄██▀  ${cyanf}  ▀██▄   ▄██▀  ${reset}
 
-${boldon}
- ${redf} ▄█▀ █ █ ▀█▄   ${greenf} ▄█▀ █ █ ▀█▄   ${yellowf} ▄█▀ █ █ ▀█▄   ${bluef} ▄█▀ █ █ ▀█▄   ${purplef} ▄█▀ █ █ ▀█▄   ${cyanf} ▄█▀ █ █ ▀█▄
- ${redf}███  ███  ███  ${greenf}███  ███  ███  ${yellowf}███  ███  ███  ${bluef}███  ███  ███  ${purplef}███  ███  ███  ${cyanf}███  ███  ███
- ${redf}█████████████  ${greenf}█████████████  ${yellowf}█████████████  ${bluef}█████████████  ${purplef}█████████████  ${cyanf}█████████████
- ${redf} ▀██▄   ▄██▀   ${greenf} ▀██▄   ▄██▀   ${yellowf} ▀██▄   ▄██▀   ${bluef} ▀██▄   ▄██▀   ${purplef} ▀██▄   ▄██▀   ${cyanf} ▀██▄   ▄██▀
-${reset}
+${boldon}${redf}  ▄█▀ █ █ ▀█▄  ${greenf}  ▄█▀ █ █ ▀█▄  ${yellowf}  ▄█▀ █ █ ▀█▄  ${bluef}  ▄█▀ █ █ ▀█▄  ${purplef}  ▄█▀ █ █ ▀█▄  ${cyanf}  ▄█▀ █ █ ▀█▄  ${reset}
+${boldon}${redf} ███  ███  ███ ${greenf} ███  ███  ███ ${yellowf} ███  ███  ███ ${bluef} ███  ███  ███ ${purplef} ███  ███  ███ ${cyanf} ███  ███  ███ ${reset}
+${boldon}${redf} █████████████ ${greenf} █████████████ ${yellowf} █████████████ ${bluef} █████████████ ${purplef} █████████████ ${cyanf} █████████████ ${reset}
+${boldon}${redf}  ▀██▄   ▄██▀  ${greenf}  ▀██▄   ▄██▀  ${yellowf}  ▀██▄   ▄██▀  ${bluef}  ▀██▄   ▄██▀  ${purplef}  ▀██▄   ▄██▀  ${cyanf}  ▀██▄   ▄██▀  ${reset}
+
 EOF
