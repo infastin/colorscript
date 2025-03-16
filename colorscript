@@ -1,130 +1,56 @@
-#!/usr/bin/env bash
+#!/usr/bin/env nu
 
-CS_DIRS=(
-	/usr/local/share/colorscript
-	/usr/share/colorscript
-	$HOME/.local/share/colorscript
-)
+let data_dirs = $env.XDG_DATA_DIRS?
+  | default ""
+  | split row ":"
+  | where {is-not-empty}
+  | uniq
 
-declare CS_LIST
-declare -A CS_TABLE
-
-_prep() {
-	for dir in ${CS_DIRS[@]}; do
-		if ! [[ -d $dir ]]; then
-			continue
-		fi
-		
-		for spath in $dir/*; do
-			if ! [[ -f $spath ]]; then
-				continue
-			fi
-			
-			sname=$(basename $spath)
-			
-			if [[ -z ${CS_TABLE[$sname]} ]]; then
-				CS_LIST+=($sname)
-			fi
-			
-			CS_TABLE[$sname]=$spath
-		done
-	done
+let script_dirs = $data_dirs
+  | each {path join "colorscript"}
+  | where {path exists}
+if ($script_dirs | is-empty) {
+  print -e "No colorscript directory has been found in $XDG_DATA_DIRS"
+  exit 1
 }
 
-_usage() {
-	pname=$(basename $0)
-
-	echo "Usage: ${pname} [OPTION] [VALUE]"
-	echo "Options:"
-	echo -e "  -h\tPrint this message"
-	echo -e "  -n\tRun script with the name given in VALUE"
-	echo -e "  -i\tRun script with the index given in VALUE"
-	echo -e "  -s\tSelect script to run"
-	echo -e "  -l\tList all available scripts"
-	echo -e "  -r\tRun random script"
-
-	exit 0
+def get-scripts []: nothing -> table<name: string, path: path> {
+  $script_dirs
+    | each {|dir| ls $dir}
+    | flatten
+    | where type == file
+    | each {|entry| {name: ($entry.name | path basename), path: $entry.name}}
 }
 
-_len() {
-	echo ${#CS_LIST[@]}
+# A collection of terminal color scripts.
+def main [
+  --name  (-n): string # Run script with the given name.
+  --index (-i): int    # Run script with the given index.
+]: nothing -> string {
+  let scripts = get-scripts
+  if $name != null {
+    exec ($scripts | where name == $name | $in.0.path)
+  } else if $index != null {
+    exec ($scripts | get $index | get path)
+  } else {
+    let index = random int ..($scripts | length)
+    exec ($scripts | get $index | get path)
+  }
 }
 
-_run_cs() {
-	sname=$1
-	spath=${CS_TABLE[$sname]}
-	
-	echo $sname
-	exec $spath
-	
-	exit 0
+# Select script to run.
+def "main select" []: nothing -> string {
+  let scripts = get-scripts
+
+  let choice = $scripts.name | input list
+  if $choice == null {
+    exit 1
+  }
+
+  exec ($scripts | where name == $choice | $in.0.path)
 }
 
-_random() {
-	rnd=$(($RANDOM % $(_len)))
-	sname=${CS_LIST[$rnd]}
-	
-	_run_cs $sname
+# List all available scripts.
+def "main list" []: nothing -> list<string> {
+  get-scripts | get name
 }
-
-_sel_cs() {
-	select sname in ${CS_LIST[@]}; do
-		if [[ -n $sname ]]; then
-			break;
-		fi
-		
-		echo "Invalid choice!"
-	done
-	
-	_run_cs $sname
-}
-
-_list() {
-	i=0
-	for sname in ${CS_LIST[@]}; do
-		echo "$i) $sname"
-		i=$(($i+1))
-	done | column
-	
-	exit 0
-}
-
-_index() {
-	sidx=$(($1 - 1))
-	
-	if [[ $sidx -lt 0 || $sidx -ge $(_len) ]]; then
-		echo "Invalid index!"
-		exit 1
-	fi
-	
-	sname=${CS_LIST[$sidx]}
-	
-	_run_cs $sname
-}
-
-_name() {
-	sname=$1
-	
-	if [[ -z ${CS_TABLE[$sname]} ]]; then
-		echo "Invalid name!"
-		exit 1
-	fi
-	
-	_run_cs $sname
-}
-
-_prep
-
-while getopts hlsn:i:r arg; do
-	case $arg in
-	h) _usage ;;
-	n) _name $OPTARG ;;
-	i) _index $OPTARG ;;
-	r) _random ;;
-	s) _sel_cs ;;
-	l) _list ;;
-	?) break ;;
-	esac
-done
-
-_usage
