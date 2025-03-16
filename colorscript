@@ -33,7 +33,7 @@ def main [
   } else if $index != null {
     exec ($scripts | get $index | get path)
   } else {
-    let index = random int ..($scripts | length)
+    let index = random int ..(($scripts | length) - 1)
     exec ($scripts | get $index | get path)
   }
 }
