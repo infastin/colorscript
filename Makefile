@@ -20,5 +20,5 @@ install:
 	done
 
 uninstall:
-	rm $(DESTDIR)$(BINDIR)/colorscript
+	rm -f $(DESTDIR)$(BINDIR)/colorscript
 	rm -rf $(DESTDIR)$(DATADIR)/colorscript
