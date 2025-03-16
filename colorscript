@@ -28,6 +28,11 @@ def main [
   --index (-i): int    # Run script with the given index.
 ]: nothing -> string {
   let scripts = get-scripts
+  if ($scripts | is-empty) {
+    print -e "Color scripts not found"
+    exit 1
+  }
+
   if $name != null {
     exec ($scripts | where name == $name | $in.0.path)
   } else if $index != null {
