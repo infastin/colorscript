@@ -1,61 +1,142 @@
-#!/usr/bin/env nu
+#!/usr/bin/env bash
+set -euo pipefail
 
-let data_dirs = $env.XDG_DATA_DIRS?
-  | default ""
-  | split row ":"
-  | where {is-not-empty}
-  | uniq
+usage() {
+  cat <<EOF
+Usage: $0 [options]
 
-let script_dirs = $data_dirs
-  | each {path join "colorscript"}
-  | where {path exists}
-if ($script_dirs | is-empty) {
-  print -e "No colorscript directory has been found in $XDG_DATA_DIRS"
+A collection of terminal color scripts
+Execute random color script if no options are specified
+
+Options:
+  -n <name>     Run script with the given name
+  -i <index>    Run script with the given index
+  -s            Select script to run
+  -l            List all available scripts
+  -h            Display the help message for this script
+EOF
+}
+
+DATA_DIRS=${XDG_DATA_DIRS:-""}
+
+get_scripts() {
+  IFS=":"
+  for dir in $DATA_DIRS; do
+    if [ ! -d "$dir/colorscript" ]; then
+      continue
+    fi
+    for file in "$dir"/colorscript/*; do
+      if [ -f "$file" ] && [ -x "$file" ]; then
+        echo "$file"
+      fi
+    done
+  done
+  unset IFS
+}
+
+select_script() {
+  declare -A scripts
+  for script in $(get_scripts); do
+    scripts["${script##*/}"]="$script"
+  done
+
+  select name in "${!scripts[@]}"; do
+    if [[ -v scripts["$name"] ]]; then
+      exec "${scripts["$name"]}"
+    fi
+  done
+}
+
+list_scripts() {
+  local scripts=($(get_scripts))
+  for i in "${!scripts[@]}"; do
+    echo "$i) ${scripts[$i]##*/}"
+  done
+}
+
+random_script() {
+  local scripts=($(get_scripts))
+  local index=$((RANDOM % ${#scripts[@]}))
+  exec "${scripts[$index]}"
+}
+
+script_by_name() {
+  local name="$1"
+
+  local path
+  for script in $(get_scripts); do
+    if [[ "${script##*/}" == "$name" ]]; then
+      path="$script"
+      break
+    fi
+  done
+
+  if [[ ! -v path ]]; then
+    echo "No script with name '$name'"
+    exit 1
+  fi
+
+  exec "$path"
+}
+
+script_by_index() {
+  local index=$1
+
+  local scripts=($(get_scripts))
+  if [ $1 -ge ${#scripts[@]} ]; then
+    echo "No script with index '$index' (there are only ${#scripts[@]} scripts)"
+    exit 1
+  fi
+
+  exec "${scripts[$index]}"
+}
+
+NAME=""
+INDEX=""
+SELECT=false
+LIST=false
+
+while getopts "n:i:slh" opt; do
+  case $opt in
+    n)
+      NAME="$OPTARG"
+      ;;
+    i)
+      INDEX="$OPTARG"
+      ;;
+    s)
+      SELECT=true
+      ;;
+    l)
+      LIST=true
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
+if [ $# -ne 0 ]; then
+  echo "$0: too many arguments"
+  usage
   exit 1
-}
+fi
 
-def get-scripts []: nothing -> table<name: string, path: path> {
-  $script_dirs
-    | each {|dir| ls $dir}
-    | flatten
-    | where type == file
-    | each {|entry| {name: ($entry.name | path basename), path: $entry.name}}
-}
-
-# A collection of terminal color scripts.
-def main [
-  --name  (-n): string # Run script with the given name.
-  --index (-i): int    # Run script with the given index.
-]: nothing -> string {
-  let scripts = get-scripts
-  if ($scripts | is-empty) {
-    print -e "Color scripts not found"
-    exit 1
-  }
-
-  if $name != null {
-    exec ($scripts | where name == $name | $in.0.path)
-  } else if $index != null {
-    exec ($scripts | get $index | get path)
-  } else {
-    let index = random int ..(($scripts | length) - 1)
-    exec ($scripts | get $index | get path)
-  }
-}
-
-# Select script to run.
-def "main select" []: nothing -> string {
-  let scripts = get-scripts
-
-  let choice = $scripts.name | input list
-  if $choice == null {
-    exit 1
-  }
-
-  exec ($scripts | where name == $choice | $in.0.path)
-}
-
-# List all available scripts.
-def "main list" []: nothing -> list<string> {
-  get-scripts | get name
-}
+if [ -n "$NAME" ]; then
+  script_by_name "$NAME"
+elif [ -n "$INDEX" ]; then
+  script_by_index "$INDEX"
+elif $SELECT; then
+  select_script
+elif $LIST; then
+  list_scripts
+else
+  random_script
+fi
